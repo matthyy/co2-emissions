@@ -1,0 +1,15 @@
+
+.form-container {
+    display:flex;
+    flex-direction: row;
+    margin-left: 20px;
+    margin-right: 20px;
+}
+
+.label-form {
+    display: block;
+}
+
+.form-control {
+    display:block;
+}
