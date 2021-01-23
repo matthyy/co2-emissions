@@ -1,118 +1,111 @@
-import './App.css';
-import {FormControl, Select, MenuItem, InputLabel, withStyles} from '@material-ui/core';
-import React, {Component} from "react";
-import TextField from "@material-ui/core/TextField";
-import {computeConsumption} from "./module/consumption-algo";
+import './App.css'
+import React, { Component } from 'react'
+import TextField from '@material-ui/core/TextField'
+import { computeEmission } from './Module/emission-algo'
+import FormWrapper from './Components/FormWrapper'
+import InputWrapper from './Components/InputWrapper'
+import Device from './Components/Device'
+import Network from './Components/Network'
+import CarbonConsume from './Components/CarbonConsume'
+import { getKwhDevices } from './Sdk/device-kwh'
+import { getKwhNetworks } from './Sdk/network-kwh'
 
 class App extends Component {
     constructor(props) {
-        super(props);
-        this.handleChangeDeviceType = this.handleChangeDeviceType.bind(this);
-        this.handleNetworkType = this.handleNetworkType.bind(this);
-        this.handleNumberOfHours = this.handleNumberOfHours.bind(this);
+        super(props)
+        this.handleChangeDeviceType = this.handleChangeDeviceType.bind(this)
+        this.handleChangeNetworkType = this.handleChangeNetworkType.bind(this)
+        this.handleChangeNumberOfHours = this.handleChangeNumberOfHours.bind(this)
 
-        this.deviceTypeField = React.createRef();
-        this.networkTypeField = React.createRef();
-        this.numberOfHoursField = React.createRef();
+        this.deviceTypeField = React.createRef()
+        this.networkTypeField = React.createRef()
+        this.numberOfHoursField = React.createRef()
+
+        // should be refacto when using an Api
+        const networks = getKwhNetworks()
+        const devices = getKwhDevices()
 
         this.state = {
             deviceType: '',
             networkType: '',
-            numberOfHours: "0",
-            carboneConsume: 0
-        };
+            numberOfHours: '0',
+            carbonEmit: 0,
+            devices,
+            networks,
+        }
     }
 
+    /**
+     * @param {object} e
+     */
     handleChangeDeviceType(e) {
         const val = e.target.value
-        const carboneConsume = computeConsumption(this.state.networkType, val, this.state.numberOfHours)
+        const carbonEmit = computeEmission(this.state.networkType, val, this.state.numberOfHours)
         this.setState({
             deviceType: val,
-            carboneConsume
+            carbonEmit,
         })
     }
 
-    handleNetworkType(e) {
+    /**
+     * @param {object} e
+     */
+    handleChangeNetworkType(e) {
         const val = e.target.value
-        const carboneConsume = computeConsumption(val, this.state.deviceType, this.state.numberOfHours)
+        const carbonEmit = computeEmission(val, this.state.deviceType, this.state.numberOfHours)
         this.setState({
             networkType: val,
-            carboneConsume
+            carbonEmit,
         })
     }
 
-    handleNumberOfHours(e) {
+    /**
+     * @param {object} e
+     */
+    handleChangeNumberOfHours(e) {
         const val = e.target.value
-        const carboneConsume = computeConsumption(this.state.networkType, this.state.deviceType, parseInt(val, 10))
+        const carbonEmit = computeEmission(this.state.networkType, this.state.deviceType, parseInt(val, 10))
         this.setState({
             numberOfHours: parseInt(val, 10),
-            carboneConsume
+            carbonEmit,
         })
     }
 
+    /**
+     * @returns {JSX.Element}
+     */
     render() {
-        const FormControlStyle = withStyles({
-            root: {
-                "flex-direction": "col",
-                display:'flex',
-                "justifyContent": "space-around",
-                "align-items": "flex-end"
-            },
-        })(FormControl);
-
-        const InputLabelStyle = withStyles({
-            root: {
-                position: "relative",
-                display: "block",
-                "margin-bottom": "15px"
-            },
-        })(InputLabel);
-
         return (
             <div className="App">
-              <h2>Calculate your CO2 emmissions</h2>
-              <div className="container-row">
-                  <FormControlStyle>
-                      <InputLabelStyle> Device Types </InputLabelStyle>
-                      <Select
-                          inputRef={this.deviceTypeField}
-                          displayEmpty
-                          value={this.state.deviceType}
-                          onChange={this.handleChangeDeviceType}>
-                          <MenuItem value="" disabled>Select</MenuItem>
-                          <MenuItem value={0}>Smartphone</MenuItem>
-                          <MenuItem value={1}>Tablet</MenuItem>
-                          <MenuItem value={2}>Laptop</MenuItem>
-                          <MenuItem value={3}>Television</MenuItem>
-                      </Select>
-                  </FormControlStyle>
-                  <FormControlStyle>
-                      <InputLabelStyle> Network Types </InputLabelStyle>
-                      <Select
-                          displayEmpty
-                          inputRef={this.deviceTypeField}
-                          value={this.state.networkTypeField}
-                          onChange={this.handleNetworkType}>
-                          <MenuItem value="" disabled>Select</MenuItem>
-                          <MenuItem value={0}>Wifi</MenuItem>
-                          <MenuItem value={1}>4G</MenuItem>
-                      </Select>
-                  </FormControlStyle>
-                  <FormControlStyle>
-                      <InputLabelStyle> Number of hours </InputLabelStyle>
-                      <TextField
-                          inputRef={this.numberOfHoursField}
-                          value={this.state.numberOfHours}
-                          onChange={this.handleNumberOfHours}
-                          inputProps={{type: 'number'}}
-                      />
-                  </FormControlStyle>
-              </div>
-              <p>Carbone consume : {this.state.carboneConsume}</p>
+                <h2>Calculate your CO2 emissions</h2>
+                <div className="container-row">
+                    <Device
+                        deviceType={this.state.deviceType}
+                        handleChangeDeviceType={this.handleChangeDeviceType}
+                        deviceTypeField={this.deviceTypeField}
+                        devices={this.state.devices}
+                    />
+                    <Network
+                        deviceType={this.state.networkType}
+                        handleChangeNetworkType={this.handleChangeNetworkType}
+                        const
+                        networkTypeField={this.networkTypeField}
+                        networks={this.state.networks}
+                    />
+                    <FormWrapper>
+                        <InputWrapper> Number of hours </InputWrapper>
+                        <TextField
+                            inputRef={this.numberOfHoursField}
+                            value={this.state.numberOfHours}
+                            onChange={this.handleChangeNumberOfHours}
+                            inputProps={{ type: 'number' }}
+                        />
+                    </FormWrapper>
+                </div>
+                <CarbonConsume emissions={this.state.carbonEmit} />
             </div>
-      );
+        )
     }
 }
 
-
-export default App;
+export default App
